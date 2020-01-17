@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:cxf="http://camel.apache.org/schema/cxf"
+    xmlns:http-conf="http://cxf.apache.org/transports/http/configuration"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="          http://www.springframework.org/schema/beans           http://www.springframework.org/schema/beans/spring-beans.xsd            http://camel.apache.org/schema/cxf           http://camel.apache.org/schema/cxf/camel-cxf.xsd                http://camel.apache.org/schema/spring                 http://camel.apache.org/schema/spring/camel-spring.xsd                http://cxf.apache.org/transports/http/configuration     http://cxf.apache.org/schemas/configuration/http-conf.xsd">
+    <cxf:cxfEndpoint address="http://0.0.0.0:8086/ReqPANRoute"
+        id="eKYCReqPAN"
+        serviceClass="pan.tml.service.DataPANStatus" wsdlURL="PANCheck.wsdl">
+        <cxf:properties>
+            <entry key="dataFormat" value="MESSAGE"/>
+        </cxf:properties>
+    </cxf:cxfEndpoint>
+    <cxf:rsClient address="https://testapi.karza.in/v2/pan"
+        id="rsPANAPI" loggingFeatureEnabled="true"/>
+    <cxf:rsClient address="https://testapi.karza.in/v3/name"
+        id="rsNameMatchAPI" loggingFeatureEnabled="true"/>
+    <camelContext id="camel" streamCache="true"
+        xmlns="http://camel.apache.org/schema/spring" xmlns:ser="http://service.TML.PAN/">
+        <route id="eKYCReqPAN" xmlns="http://camel.apache.org/schema/spring">
+            <from id="_from1" uri="cxf:bean:eKYCReqPAN"/>
+            <doTry id="_doTry1">
+                <log id="_log1" message="Request Received from CRM____${body}"/>
+                <setHeader headerName="Content-Type" id="_setHeader4">
+                    <constant>application/json</constant>
+                </setHeader>
+                <setHeader headerName="x-karza-key" id="_setHeader5">
+                    <constant>9qvf2X7URXTSfuvficjh</constant>
+                </setHeader>
+                <log id="_log1" message="after setting constant headers____${header.x-karza-key}"/>
+                <setHeader headerName="consent" id="_setHeader1">
+                    <xpath>//ser:PANRequest/consent/text()</xpath>
+                </setHeader>
+                <log id="_log1" message="after setting constant headers____${header.x-karza-key}"/>
+                <setHeader headerName="pan" id="_setHeader1">
+                    <xpath>//ser:PANRequest/pan/text()</xpath>
+                </setHeader>
+                <log id="_log1" message="after setting fileNo____${header.pan}"/>
+                <setHeader headerName="name" id="_setHeader2">
+                    <xpath>//ser:PANRequest/name/text()</xpath>
+                </setHeader>
+                <log id="_log1" message="after setting passportno____${header.name}"/>
+                <setBody id="_setBody1">
+                    <simple>{"consent":"${header.consent}", "pan":"${header.pan}"}</simple>
+                </setBody>
+                <to id="_to2" pattern="InOut" uri="cxfrs:bean:rsPANAPI?throwExceptionOnFailure=false"/>
+                <log id="_log2" message="Response send to CRM_______ ${body}"/>
+                <choice id="_choice1">
+                    <when id="_when1">
+                        <simple>${header.CamelHttpResponseCode} == '200'</simple>
+                        <log id="_log1" message="Request Received from CRM____${body}"/>
+                        <setHeader headerName="Content-Type" id="_setHeader4">
+                            <constant>application/json</constant>
+                        </setHeader>
+                        <setHeader headerName="x-karza-key" id="_setHeader5">
+                            <constant>9qvf2X7URXTSfuvficjh</constant>
+                        </setHeader>
+                        <setHeader headerName="request_id" id="_setHeader6">
+                            <jsonpath>$.request_id</jsonpath>
+                        </setHeader>
+                        <log id="_log5" message="Header Result_${header.request_id}"/>
+                        <setHeader headerName="status-code" id="_setHeader8">
+                            <jsonpath>$.status-code</jsonpath>
+                        </setHeader>
+                        <log id="_log7" message="Header Result_${header.status-code}"/>
+                        <setHeader headerName="name1" id="_setHeader8">
+                            <jsonpath>$.result.name</jsonpath>
+                        </setHeader>
+                        <log id="_log7" message="Header Result_${header.name1}"/>
+                        <choice id="_choice1">
+                            <when id="_when1">
+                                <simple>${header.status-code} == '101'</simple>
+                                <setHeader
+                                    headerName="Verification_status" id="_setHeader10">
+                                    <constant>VERIFIED</constant>
+                                </setHeader>
+                            </when>
+                            <otherwise id="_otherwise1">
+                                <setHeader
+                                    headerName="Verification_status" id="_setHeader2">
+                                    <constant>NOT VERIFIED</constant>
+                                </setHeader>
+                            </otherwise>
+                        </choice>
+                        <log id="_log5" message="Header Result_${header.name}"/>
+                        <setHeader headerName="type" id="_setHeader8">
+                            <constant>individual</constant>
+                        </setHeader>
+                        <setHeader headerName="preset" id="_setHeader9">
+                            <constant>L</constant>
+                        </setHeader>
+                        <setBody id="_setBody3">
+                            <simple>{"name1":"${header.name1}", "name2":"${header.name}","type":"${header.type}","preset":"${header.preset}"}</simple>
+                        </setBody>
+                        <log id="_log5" message="Header Result_${header._setBody3}"/>
+                        <to id="_to3" pattern="InOut" uri="cxfrs:bean:rsNameMatchAPI?throwExceptionOnFailure=false"/>
+                        <log id="_log2" message="after second request_______ ${body}"/>
+                        <setHeader headerName="requestId" id="_setHeader7">
+                            <jsonpath>$.requestId</jsonpath>
+                        </setHeader>
+                        <setHeader headerName="statusCode" id="_setHeader7">
+                            <jsonpath>$.statusCode</jsonpath>
+                        </setHeader>
+                        <setHeader headerName="score" id="_setHeader7">
+                            <jsonpath>$.result.score</jsonpath>
+                        </setHeader>
+                        <setHeader headerName="result" id="_setHeader7">
+                            <jsonpath>$.result.result</jsonpath>
+                        </setHeader>
+                        <setBody id="_setBody2">
+                            <simple>&lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ser="http://service.TML.PAN/"&gt;
+                                                   &lt;soapenv:Header/&gt;
+                                                   &lt;soapenv:Body&gt;
+                                                      &lt;ser:panCHECK&gt;
+                                                         &lt;statusCode&gt;${header.statusCode}&lt;/statusCode&gt;
+                                                                &lt;requestId&gt;${header.requestId}&lt;/requestId&gt;
+                                                                &lt;Verification_status&gt;${header.Verification_status}&lt;/Verification_status&gt;
+                                                                &lt;name1&gt;${header.name1}&lt;/name1&gt;
+                                                                &lt;name2&gt;${header.name}&lt;/name2&gt;
+                                                             &lt;result&gt;                                                                           
+                                                                                  &lt;score&gt;${header.score}&lt;/score&gt;
+                                                                                  &lt;result&gt;${header.result}&lt;/result&gt;                                                                     
+                                                                     &lt;/result&gt;                                                                  
+                                                      &lt;/ser:panCHECK&gt;
+                                                   &lt;/soapenv:Body&gt;
+                                                &lt;/soapenv:Envelope&gt;
+                                              </simple>
+                        </setBody>
+                    </when>
+                </choice>
+                <doCatch id="_doCatch1">
+                    <exception>java.net.SocketTimeoutException</exception>
+                    <setFaultBody id="_setBody3">
+                        <simple>Timeout Exception while calling Electric Authentication Service.</simple>
+                    </setFaultBody>
+                </doCatch>
+                <doCatch id="_doCatch2">
+                    <exception>java.lang.Exception</exception>
+                    <setFaultBody id="_setBody4">
+                        <constant>Error Occurred. Please check Logs.</constant>
+                    </setFaultBody>
+                </doCatch>
+            </doTry>
+        </route>
+    </camelContext>
+</beans>
+
