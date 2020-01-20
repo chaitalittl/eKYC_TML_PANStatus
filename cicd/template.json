@@ -227,7 +227,7 @@
 "name": "NAME",
 "displayName": "Name",
 "required": true,
-"value": "vmeofftakeclaim"
+"value": "ekycpanstatus"
 },
 {
 "name": "PROJECT",
