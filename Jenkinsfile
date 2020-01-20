@@ -97,7 +97,7 @@ pipeline {
 		  steps{      
 			  script{
 			    try { 	  
-	               	      timeout(time: 120, unit: 'SECONDS') {	  
+	               	      timeout(time: 300, unit: 'SECONDS') {	  
 				openshift.withCluster() {
 					openshift.withProject(env.PROJECT) {
 						echo "Using project: ${openshift.project()}"
