@@ -14,5 +14,5 @@ spec:
     jenkinsPipelineStrategy:
       env:
       - name: PROJECT
-        value: dev
+        value: dev-esb
       jenkinsfilePath: 'Jenkinsfile'
