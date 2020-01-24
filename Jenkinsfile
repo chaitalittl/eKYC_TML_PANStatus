@@ -5,7 +5,7 @@ def proxy= "http://172.18.88.11:80"
 pipeline {
 	    environment { 
 		    NAME='ekycpanstatus'
-		    DEV_NAMESPACE='dev'
+		    DEV_NAMESPACE='dev-esb'
 		    QA_NAMESPACE='qa-esb'
 		    PROD_NAMESPACE='prod-esb'
     	    }
